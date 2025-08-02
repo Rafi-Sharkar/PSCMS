@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  EMPLOYEE
+  FARMER
+  CUSTOMER
+}
+
+enum ProductNames {
+    BROILER
+    DESHI
+    SONALI
+    DUCK
+}
+
+enum OrderStatus {
+  PENDING
+  ASSIGNED
+  COLLECTING
+  DELIVERED
+  BILLED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PARTIAL
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String   @unique
+  password    String
+  role        UserRole
+  address     String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  // This is a many-to-many self-relationship
+  // A Farmer or Customer can belong to many Owners (businesses)
+  // An Owner can have many Customers and Farmers.
+  ownedBusinesses UserBusiness[] @relation("OwnerRelations")
+  associatedBusinesses UserBusiness[] @relation("UserRelations")
+
+  orders      Order[]       @relation("CustomerOrders")
+  assignedOrders Order[]       @relation("EmployeeOrders")
+  farmerStocks FarmStock[]   @relation("FarmerStock")
+  collections Collection[]   @relation("EmployeeCollections")
+  OwnerOrders    OwnerOrder[]     @relation("OwnerOwnerOrders")
+  trackings    Tracking[]    @relation("EmployeeTracking")
+
+  @@map("users")
+}
+
+// This model is used to establish a many-to-many relationship between Users and Businesses
+// where a User can be associated with multiple Businesses and vice versa.
+model UserBusiness {
+  id         String @id @default(uuid())
+  
+  userId     String
+  ownerId    String
+
+  user       User   @relation("UserRelations", fields: [userId], references: [id])
+  owner      User   @relation("OwnerRelations", fields: [ownerId], references: [id])
+
+  @@unique([userId, ownerId],name: "unique_user_owner")
+  @@map("user_businesses")
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  customerId   String      @unique
+  assignedToId String?
+  productName  ProductNames
+  quantityKg   Int
+  totalPrice   Float
+  deliveryAddress String
+  deliveryTime DateTime
+  collectionId String?
+  deliveryStatus       OrderStatus @default(PENDING)
+  paymentStatus        PaymentStatus @default(UNPAID)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  customer     User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  employee     User?       @relation("EmployeeOrders", fields: [assignedToId], references: [id])
+  collection   Collection? @relation("CollectionOrders", fields: [collectionId], references: [id])
+
+  @@map("orders")
+}
+
+model FarmStock {
+  id           String   @id @default(uuid())
+  farmerId     String   @unique
+  imageUrl     String?
+  productName  ProductNames
+  description  String?
+  pricePerKg   Float
+  availableKg  Int
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+
+  // Relations
+  farmers      User     @relation("FarmerStock", fields: [farmerId], references: [id])
+  OwnerOrders      OwnerOrder[] @relation("FarmStockOwnerOrders")
+
+  @@map("farm_stocks")
+}
+
+model Collection {
+  id             String   @id @default(uuid())
+  employeeId     String   @unique
+  trackingId     String?
+  collectionTargetKg Int
+  collectedKg    Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  employee       User      @relation("EmployeeCollections", fields: [employeeId], references: [id])
+  OwnerOrders       OwnerOrder[] @relation("CollectionOwnerOrders")
+  orders         Order[]   @relation("CollectionOrders")
+
+  @@map("collections")
+  Tracking Tracking[]
+}
+
+model OwnerOrder {
+  id           String         @id @default(uuid())
+  farmStockId  String         @unique
+  ownerId      String
+  assignedToId String?
+  productName  ProductNames
+  quantityKg   Int
+  totalPrice   Float
+  collectionId String
+  pickupTime   DateTime?
+  createdAt    DateTime       @default(now())
+  OwnerOrderStatus OrderStatus   @default(PENDING)
+  status       PaymentStatus  @default(UNPAID)
+
+  // Relations
+  farmStock    FarmStock      @relation("FarmStockOwnerOrders", fields: [farmStockId], references: [id])
+  owner        User           @relation("OwnerOwnerOrders", fields: [ownerId], references: [id])
+  collections   Collection     @relation("CollectionOwnerOrders",fields: [collectionId], references: [id])
+
+  @@map("OwnerOrders")
+}
+
+model Tracking {
+  id         String   @id @default(uuid())
+  userId     String
+  collectionId String @unique
+  latitude   Float
+  longitude  Float
+  timestamp  DateTime @default(now())
+
+  // Relations
+  user       User     @relation("EmployeeTracking", fields: [userId], references: [id])
+  collection Collection @relation(fields: [collectionId], references: [id])
+  @@index([userId])
+  @@map("tracking")
+}
