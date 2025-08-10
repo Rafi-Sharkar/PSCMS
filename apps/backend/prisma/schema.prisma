@@ -158,7 +158,7 @@ model FarmStock {
 model FarmStockforBusiness {
   id           String        @id @default(uuid())
   businessId  String
-  farmStockId String
+  farmStockId String         @unique
 
   pricePerKg   Float?
   availableKg  Int?

@@ -55,3 +55,9 @@ export class AddUserDto {
   @IsEnum(UserRole, { message: 'Role must be one of the predefined user roles' })
   role: UserRole;
 }
+
+export class AddFarmStockToBusinessDto {
+  @ApiProperty({example: "farm-stock-123", description: "The ID of the farm stock to add"})
+  @IsString()
+  farmStockId: string;
+}

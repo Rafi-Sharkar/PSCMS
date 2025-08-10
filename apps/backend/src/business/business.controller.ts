@@ -1,6 +1,6 @@
-import { Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, ConfigurableModuleBuilder, ConflictException, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { BusinessService } from './business.service';
-import { AddUserDto, CreateBusinessDto, UpdateBusinessDto } from './dto/business.dto';
+import { AddFarmStockToBusinessDto, AddUserDto, CreateBusinessDto, UpdateBusinessDto } from './dto/business.dto';
 import { JwtAuthGuard } from 'src/auth/jwtauth.guard';
 import { RoleAuthGuard } from 'src/auth/roleauth.guard';
 
@@ -70,6 +70,29 @@ export class BusinessController {
       throw new ConflictException('Business not found');
     }
     return this.businessService.removeUserFromBusiness(userBusinessId);
+  }
+
+  @UseGuards(JwtAuthGuard, new RoleAuthGuard(["OWNER"]))
+  @Post('/farmstock')
+  async addFarmStockToBusiness(@Request() req: any, @Body() addfarmstocktobusinessdto: AddFarmStockToBusinessDto) {
+    const ownerId = req.user.id;
+    const business = await this.businessService.findBusinessesByOwnerId(ownerId);
+    if (!business) {
+      throw new ConflictException('Business not found');
+    }
+    return this.businessService.addFarmStockToBusiness(business.id, addfarmstocktobusinessdto);
+  }
+
+  @UseGuards(JwtAuthGuard, new RoleAuthGuard(["OWNER"]))
+  @Get('/farmstock')
+  async farmstockForBusiness(@Request() req: any) {
+    const ownerId = req.user.id
+    const business = await this.businessService.findBusinessesByOwnerId(ownerId)
+    if( !business){
+      throw new ConflictException("Business not found")
+    }
+    return this.businessService.findFarmStockToBusiness(business.id)
+
   }
 
 }

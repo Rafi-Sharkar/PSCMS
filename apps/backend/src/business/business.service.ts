@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AddUserDto, CreateBusinessDto } from './dto/business.dto';
+import { AddFarmStockToBusinessDto, AddUserDto, CreateBusinessDto } from './dto/business.dto';
 
 @Injectable()
 export class BusinessService {
@@ -68,6 +68,34 @@ export class BusinessService {
                 id: userBusinessId
             }
         });
+    }
+
+    async addFarmStockToBusiness(businessId: string, addfarmstocktobusinessdto: AddFarmStockToBusinessDto) {
+        const farmstock = await this.prisma.farmStock.findUnique({
+            where: {
+                id: addfarmstocktobusinessdto.farmStockId
+            }
+        });
+        if (!farmstock) {
+            throw new Error('Farm stock not found');
+        }
+        return this.prisma.farmStockforBusiness.create({
+            data: {
+                businessId: businessId,
+                farmStockId: addfarmstocktobusinessdto.farmStockId,
+                pricePerKg: farmstock.pricePerKg,
+                availableKg: farmstock.availableKg,
+                isActive: farmstock.isActive
+            }
+        });
+    }
+
+    async findFarmStockToBusiness(businessId: string) {
+        return this.prisma.farmStockforBusiness.findMany({
+            where: {
+                businessId: businessId
+            }
+        })
     }
 
 }
