@@ -97,7 +97,7 @@ model Business {
 
 model UserBusiness {
   id         String   @id @default(uuid())
-  userId     String
+  userId     String   @unique
   businessId String
   role       UserRole
 
@@ -199,7 +199,7 @@ model Collection {
 model OwnerOrder {
   id               String           @id @default(uuid())
   farmStockIdforBusiness  String
-  ownerId          String
+  ownerId          String           @unique
   businessId       String
   assignedToId     String?
   productName      ProductNames
