@@ -9,7 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Register a new user' })
-  @ApiBadRequestResponse({ description: "Invalid user data" })
+  @ApiBadRequestResponse({ description: "Invalid user data & User already exist" })
   @ApiResponse({ status: 201, description: 'User successfully registered' , type: CreateUserDto })
   @Post('/register')
   async register(@Body() createuserdto: CreateUserDto) {
@@ -18,7 +18,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'User login' })
   @ApiBadRequestResponse({ description: "Invalid login credentials" })
-  @ApiResponse({ status: 200, description: 'User successfully logged in and refresh token' })
+  @ApiResponse({ status: 200, description: 'User successfully logged in and refresh token', type: String })
   @Post('/login')
   async login(@Body() logindto: LoginDto) {
     return await this.authService.validateUser(logindto);
@@ -29,7 +29,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('/me')
   async getProfile(@Request() req: any) {
-    return req.user;
+    return this.authService.getUserInfo(req.user.phone);
   }
 
   @ApiOperation({ summary: 'Edit user profile' })

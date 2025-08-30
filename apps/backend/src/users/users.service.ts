@@ -25,23 +25,24 @@ export class UsersService {
 
     async findbyPhone(phone: string) {
         return this.prisma.user.findUnique({
-            where: { phone}
+            where: { phone }
         })
     }
 
-    async login(id: string, name: string, phone: string, role: string, businessId?: string) {
+    async login(id: string, name: string, phone: string, role: UserRole, businessId?: string) {
         const payload = { id, name, phone, role, businessId }
 
         const access_token = this.jwtService.sign(payload, {
             algorithm: 'HS256',
-            expiresIn: '24h',
+            expiresIn: '72h',
             secret: process.env.JWT_SECRET
         });
-
         return { access_token }
     }
 
     async update(id: string, updateUserDto: any) {
+        const argon2 = require('argon2');
+        updateUserDto.password = await argon2.hash(updateUserDto.password);
         return this.prisma.user.update({
             where: { id },
             data: { ...updateUserDto }

@@ -55,10 +55,6 @@ export class UpdateUserDto {
     @IsString()
     password?: string;
 
-    @ApiProperty({ example: "OWNER", description: "Role of the user" })
-    @IsEnum(UserRole, { message: 'Role must be one of the predefined user roles' })
-    role?: UserRole;
-
     @ApiProperty({ example: "Sector 14, Uttara, Dhaka", description: "Address of the user" })
     @IsString()
     address?: string;
