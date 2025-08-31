@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import logo from '../public/images/Rooster PSC.png'
+import logo from '../../public/images/Rooster PSC.png'
 
 export default function WelcomePage() {
   return (
