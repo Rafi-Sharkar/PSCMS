@@ -1,170 +1,138 @@
-# PSCMS — Poultry Supply Chain Management System
 
-This repository is a monorepo managed with Turborepo. It contains a Next.js frontend and a NestJS backend that work together to provide a Poultry Supply Chain Management System (PSCMS).
+# PSCMS — Poultry Supply Chain Management System (Backend-first)
 
-This README gives an overview of the project structure, setup and development commands, deployment notes, and pointers for contributors.
+This repository is a Turborepo monorepo. The primary focus of this project is the NestJS backend API which implements the core domain and business logic for a Poultry Supply Chain Management System (PSCMS). The frontend is a Next.js application that consumes the backend API — short note about Next.js is included below.
 
-## Repository layout
+The backend is implemented with NestJS following domain-driven modular structure: controllers, services, modules, DTOs, and Prisma for persistence. Authentication uses JWT and simple role-based authorization guards.
 
-- apps/
-  - backend/      — NestJS API server (Prisma, Swagger, JWT auth)
-  - frontend/     — Next.js (App Router) frontend (React 19)
-- packages/
-  - eslint-config/ — shared ESLint configs
-  - typescript-config/ — shared TypeScript configs
-- ui/            — small shared UI components
+This README focuses on the NestJS concepts used in the project, how to run and extend the backend, and where core domain logic lives.
 
-Top-level scripts are provided via the root `package.json` which uses Turborepo to run tasks across packages.
+## High level project concept
 
-## Quick start (development)
+- Purpose: manage poultry farm stock, collections, orders, owner orders and business entities.
+- Backend-first: all core logic, validation, and persistence live in the NestJS API.
+- Frontend: a Next.js app (in `apps/frontend`) provides the UI; it expects the API to be available at an address configured by environment variables.
+
+## Repository layout (backend-focused)
+
+- apps/backend/ — NestJS API server
+  - src/
+    - auth/ — authentication, JWT, guards
+    - users/ — users controller, services, DTOs
+    - business/ — business lifecycle and owner interactions
+    - farm_stock/ — farm stock CRUD (farmer-owned)
+    - collection/ — collection flows (employee/owner)
+    - orders/ — customer orders
+    - owner_order/ — owner-initiated orders
+    - prisma/ — Prisma client & schema
+    - generated/ — committed Prisma client artifacts
+- apps/frontend/ — Next.js UI (short note below)
+- packages/ — shared configs (eslint, tsconfig)
+
+## Key NestJS concepts used and how they map to this project
+
+- Modules — logical feature grouping. For example, `BusinessModule` imports services and controllers related to business operations.
+- Controllers — HTTP layer. Each controller (e.g., `BusinessController`) defines routes with decorators like `@Controller`, `@Get()`, `@Post()`. Controllers should stay thin and delegate to services.
+- Services — application/business logic. Services contain the core operations (create, update, search) and use Prisma for persistence.
+- DTOs (Data Transfer Objects) — request/response shapes and validation. DTOs are declared in each feature's `dto/` folder and used with Nest's validation pipe.
+- Guards — authentication/authorization. This project uses `JwtAuthGuard` for authentication and `RoleAuthGuard([...])` for role-based authorization.
+- Prisma — ORM for database access. Schema in `apps/backend/prisma/schema.prisma`. Generated client is committed under `generated/` for convenience in some deployments.
+- Swagger decorators — used for API documentation (`@ApiOperation`, `@ApiResponse`) in some controllers.
+
+## Backend quick start (detailed)
 
 Prerequisites:
 
-- Node.js >= 18 (project `engines` requires >=18)
-- npm (the repository uses the `packageManager` field: npm@11.4.2 was used to create it)
-- (Optional) PostgreSQL or another database supported by Prisma for local development
+- Node.js >= 18
+- npm
+- A database compatible with Prisma (e.g., PostgreSQL) and a connection URL
 
-1. Install dependencies from the repository root:
+Steps:
+
+1. From repository root, install dependencies:
 
 ```powershell
 npm install
 ```
 
-2. Create a `.env` file for the backend. See the "Environment variables" section below for recommended variables.
-
-3. Run the development stack (uses turbo to run both apps):
-
-```powershell
-npm run dev
-```
-
-This runs Turborepo's `dev` task which starts the frontend Next.js server and the backend NestJS server (watch mode) concurrently according to each app's `package.json` scripts.
-
-You can also start apps individually:
-
-```powershell
-# Frontend (Next.js)
-cd apps/frontend; npm run dev
-
-# Backend (NestJS)
-cd apps/backend; npm run dev
-```
-
-## Scripts
-
-From repository root (uses Turborepo):
-
-- `npm run dev`   — Run development servers for all apps (turbo run dev)
-- `npm run build` — Build all apps (turbo run build)
-- `npm run lint`  — Run lint for all packages
-- `npm run format` — Format codebase (Prettier)
-- `npm run check-types` — Run TypeScript checks via turbo
-
-App-level scripts (examples):
-
-- `apps/frontend/package.json`
-  - `dev` — next dev --turbopack
-  - `build` — next build --turbopack
-  - `start` — next start
-
-- `apps/backend/package.json`
-  - `dev` — nest start --watch
-  - `build` — nest build
-  - `start` — nest start (production)
-
-## Backend (NestJS) details
-
-- Framework: NestJS v11
-- ORM: Prisma (client included in generated folder)
-- Auth: JWT and role-based guards (see `src/auth`)
-
-Prisma schema is in `apps/backend/prisma/schema.prisma`. Generated client is available under `apps/backend/generated/prisma` in the repository (committed). When you change the schema, run:
-
-```powershell
-cd apps/backend
-npx prisma generate
-# then migrate (development)
-npx prisma migrate dev --name your_migration_name
-```
-
-Note: The repo contains a `migrations/` folder with existing migrations.
-
-## Frontend (Next.js) details
-
-- Framework: Next.js 15 (App Router)
-- React 19
-- Styling: Tailwind CSS
-
-The frontend uses `app/` routes. To connect to the backend, update the API URL in `apps/frontend/lib/api.ts` or use environment variables.
-
-## Environment variables
-
-Create an `.env` file in `apps/backend/` (and an `.env.local` for Next.js if needed). Typical variables:
-
-- `DATABASE_URL` — Prisma database connection string (e.g., postgres://...)
-- `JWT_SECRET` — secret used by NestJS JWT module
-- `PORT` — port for backend server (defaults used in code if unset)
-
-Example `apps/backend/.env` (do NOT commit secrets):
+2. Setup backend environment variables. Create `apps/backend/.env` and add at minimum:
 
 ```text
 DATABASE_URL="postgresql://user:password@localhost:5432/pscms?schema=public"
 JWT_SECRET="replace-with-a-secure-secret"
 ```
 
-For the frontend, Next.js environment variables can be placed in `apps/frontend/.env.local` (public variables must be prefixed with NEXT_PUBLIC_). Example:
+3. Generate Prisma client (if you modify schema) and run migrations in dev:
 
-```text
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+```powershell
+cd apps/backend
+npx prisma generate
+npx prisma migrate dev --name init
 ```
 
-## Tests and linting
+4. Start the backend in watch mode:
 
-- Backend tests: `cd apps/backend && npm test` (Jest)
-- End-to-end tests: `npm run test:e2e` from backend package (see backend `package.json`)
-- Lint: `npm run lint` from repository root (turbo runs lint across packages)
+```powershell
+cd apps/backend
+npm run dev
+```
 
-## Docker and deployment
+The server will start (by default Nest uses port configured in code or `PORT` env var). API routes are defined in controllers under `src/*/*.controller.ts`.
 
-There are no Dockerfiles in the repo by default. For production deployment you can:
+## How to extend the backend (common tasks)
 
-- Build the frontend: `cd apps/frontend && npm run build` then `npm run start` (or deploy to Vercel)
-- Build the backend: `cd apps/backend && npm run build` then `npm run start:prod`
-- Use a managed database and ensure `DATABASE_URL` points to it
+- Add a new feature module:
+  1. Create a new folder under `src/` (e.g., `src/reports`).
+  2. Add `reports.module.ts`, `reports.controller.ts`, `reports.service.ts`, and DTOs.
+  3. Register the module in `src/app.module.ts` or import where needed.
 
-If you want Docker setup, I can provide Dockerfiles and a docker-compose configuration in a follow-up.
+- Add a new Prisma model:
+  1. Edit `apps/backend/prisma/schema.prisma`.
+  2. Run `npx prisma migrate dev --name add_reports`.
+  3. Run `npx prisma generate`.
 
-## Developer notes & conventions
+- Protect routes with roles:
+  - Use `@UseGuards(JwtAuthGuard, new RoleAuthGuard(["ROLE_NAME"]))` on controller methods or at controller-level.
 
-- TypeScript is used across the repo. Keep `tsconfig` settings consistent by using the shared configs in `packages/typescript-config`.
-- ESLint rules are shared in `packages/eslint-config`.
-- Turborepo is used as the task runner — use `turbo run <task>` filters when you need to target a subset of packages.
+## Testing and linting (backend)
 
-## Where to look next (important files)
+- Run unit tests (Jest):
 
-- `apps/backend/src` — backend source code (controllers, services, prisma integration)
-- `apps/backend/prisma/schema.prisma` — database schema and migrations
-- `apps/frontend/app` — Next.js app routes and components
-- `turbo.json` — turborepo configuration
-- `package.json` — root scripts and workspaces
+```powershell
+cd apps/backend
+npm test
+```
 
-## Contributing
+- Run e2e tests:
 
-1. Fork or create a branch from `main`.
-2. Follow existing linting and formatting rules.
-3. Run tests locally (see Tests section).
-4. Open a PR with a clear description and testing steps.
+```powershell
+cd apps/backend
+npm run test:e2e
+```
 
-## Contact / Maintainers
+- Lint and format:
 
-If you have questions or need help running the project locally, open an issue in this repository with details about your OS, Node.js version, and the command you ran.
+```powershell
+npm run lint
+npm run format
+```
 
----
+## Short note about the frontend (Next.js)
 
-If you'd like, I can also add:
+- The frontend is implemented in `apps/frontend` using Next.js App Router. It's primarily a consumer of the backend API. Configure `NEXT_PUBLIC_API_BASE_URL` (or similar env variable) to point to the backend server during development.
 
-- Example `.env.example` files for frontend and backend
-- Docker and docker-compose files for local development
-- A small CONTRIBUTING.md with commit message conventions
+## Where to look for domain logic
 
-Tell me which extras you'd like and I will add them.
+- Controllers: `apps/backend/src/*/*.controller.ts`
+- Services: `apps/backend/src/*/*.service.ts` — main business rules
+- DTOs: `apps/backend/src/*/dto/*.ts` — request validation shapes
+- Prisma schema and generated client: `apps/backend/prisma` and `apps/backend/generated/prisma`
+
+## Next steps I can help with
+
+- Add an `apps/backend/ENDPOINTS.md` (already created) or export OpenAPI JSON.
+- Add example `.env.example` files.
+- Generate curl examples or Postman collection for the API.
+- Add Dockerfile and docker-compose for local dev.
+
+Tell me which one you'd like next and I'll implement it.
