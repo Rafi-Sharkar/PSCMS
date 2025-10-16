@@ -74,29 +74,29 @@ The system uses a relational database with the following main entities:
 
 ## Project Structure
 ### Frontend (Next.js)
-/app
-/auth
-/business
-/farm-stock
-/orders
-/collections
-/components
-/lib
-api.ts
-/layouts
-/pages
+/app </br>
+/auth </br>
+/business </br>
+/farm-stock </br>
+/orders </br>
+/collections </br>
+/components </br>
+/lib </br>
+api.ts </br>
+/layouts </br>
+/pages </br>
 
 ### Backend (NestJS)
-/modules
-auth/
-business/
-farm-stock/
-orders/
-owner-orders/
-collections/
-main.ts
-/prisma
-schema.prisma
+/modules </br>
+auth/ </br>
+business/ </br>
+farm-stock/ </br>
+orders/ </br>
+owner-orders/ </br>
+collections/ </br>
+main.ts </br>
+/prisma </br>
+schema.prisma 
 
 
 ## Installation & Setup
