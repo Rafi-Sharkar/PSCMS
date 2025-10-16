@@ -1,135 +1,76 @@
-# Turborepo starter
+# Poultry Supply Chain Management System
 
-This Turborepo starter is maintained by the Turborepo core team.
+## Project Overview
+The Poultry Supply Chain Management System is a web-based platform designed to streamline the entire poultry supply chain. It connects **Owners, Employees, Farmers, and Customers (market shops, restaurants)** in a single system to manage orders, farm stock, collections, and deliveries efficiently. Built to replace traditional manual processes, the system provides transparency, real-time tracking, and seamless coordination among stakeholders.
 
-## Using this example
+## Problem Statement
+Traditional poultry supply chains are often fragmented, leading to delayed orders, stock mismatches, and poor tracking. This system solves these problems by centralizing business operations, automating stock updates, and managing deliveries, ensuring faster and more reliable transactions.
 
-Run the following command:
+## System Architecture
+- **Frontend:** Next.js 14 (App Router)  
+- **Backend:** NestJS v10  
+- **Database:** PostgreSQL with Prisma ORM  
+- **Authentication:** JWT with Role-based access  
+- **Deployment:** Local development only  
 
-```sh
-npx create-turbo@latest
-```
+## Features
+- Owner can create a business and manage employees, farmers, and customers  
+- Farmers update farm stock, linked automatically to businesses  
+- Customers place orders; owners create collections and assign deliveries  
+- Employees handle collection pickup and delivery  
+- Real-time order tracking and status updates  
+- Payment tracking (Paid, Partial, Unpaid)  
 
-## What's inside?
+## Database Overview
+The system uses a relational database with the following main entities:  
+- **User:** Owner, Employee, Farmer, Customer  
+- **Business:** Owned by Owner; connects all users  
+- **UserBusiness:** Many-to-many join table between User and Business  
+- **FarmStock:** Stock entries by farmers  
+- **FarmStockforBusiness:** Many-to-many relation between Business and FarmStock  
+- **Order:** Customer orders  
+- **OwnerOrder:** Owner purchases stock from farmers  
+- **Collection:** Groups of OwnerOrders for delivery  
 
-This Turborepo includes the following packages/apps:
+## API Endpoints (Short Form)
+### Auth
+- `POST /auth/register` → Register user  
+- `POST /auth/login` → Login user, return JWT  
+- `POST /auth/logout` → Logout user  
 
-### Apps and Packages
+### Business
+- `POST /business` → Create business  
+- `GET /business/:id` → Get business details  
+- `PUT /business/:id` → Update business  
+- `GET /business` → List all businesses  
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### UserBusiness
+- `POST /user-business` → Add user to business  
+- `GET /user-business/:id` → Get user-business relation  
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### FarmStock
+- `POST /farm-stock` → Add farm stock  
+- `PUT /farm-stock/:id` → Update farm stock  
+- `GET /farm-stock` → List farm stocks  
 
-### Utilities
+### FarmStockforBusiness
+- `POST /farm-stock-business` → Link farm stock to business  
+- `PUT /farm-stock-business/:id` → Update stock info for business  
 
-This Turborepo has some additional tools already setup for you:
+### Orders
+- `POST /orders` → Create customer order  
+- `PUT /orders/:id` → Update order  
+- `GET /orders` → List orders  
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### OwnerOrders
+- `POST /owner-orders` → Create owner order  
+- `PUT /owner-orders/:id` → Update owner order  
+- `GET /owner-orders` → List owner orders  
 
-### Build
+### Collections
+- `POST /collections` → Create collection  
+- `PUT /collections/:id` → Update collection status  
+- `GET /collections` → List collections  
 
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Project Structure
+### Frontend (Next.js)
