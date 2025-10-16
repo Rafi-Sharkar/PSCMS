@@ -74,3 +74,44 @@ The system uses a relational database with the following main entities:
 
 ## Project Structure
 ### Frontend (Next.js)
+/app
+/auth
+/business
+/farm-stock
+/orders
+/collections
+/components
+/lib
+api.ts
+/layouts
+/pages
+
+### Backend (NestJS)
+/modules
+auth/
+business/
+farm-stock/
+orders/
+owner-orders/
+collections/
+main.ts
+/prisma
+schema.prisma
+
+
+## Installation & Setup
+1. Clone repository: `git clone <repo-url>`  
+2. Install backend: `cd backend && npm install`  
+3. Install frontend: `cd frontend && npm install`  
+4. Setup PostgreSQL database and add `DATABASE_URL` in `.env`  
+5. Run Prisma migration: `npx prisma migrate dev`  
+6. Start backend: `npm run start:dev`  
+7. Start frontend: `npm run dev`  
+
+## Future Improvements
+- Mobile app for on-field employees and farmers  
+- Automated notifications for stock updates and deliveries  
+- Advanced analytics for orders, stock, and sales  
+
+## Author
+**Mustakim Billah Rafi**
